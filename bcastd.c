@@ -1,6 +1,7 @@
 /*
  * bcastd (version 1.0a)
  * Written by ben@cooper.compsol.fidonet.org (Ben Elliston) on 5-May-94 
+ * Updated for the 21st century on 7-Aug-2018.
  *
  * This daemon will broadcast a custom set of IP numbers to a machine which is
  * known to publicise its own routing table.
@@ -20,6 +21,9 @@
  *
  */
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -27,6 +31,7 @@
 
 #include <linux/route.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <stdio.h>
 #include <netdb.h>
@@ -67,6 +72,7 @@ struct rip
 
 void getpacket(int fd);
 
+int
 main(int ac, char *av[])
 {
     int fd, i;
@@ -75,9 +81,9 @@ main(int ac, char *av[])
     struct sockaddr_in to;
     struct sockaddr_in lonet;
 
-    bzero(&addr, sizeof(addr));
-    bzero(&to, sizeof(to));
-    bzero(&lonet, sizeof(lonet));
+    memset(&addr, 0, sizeof(addr));
+    memset(&to, 0, sizeof(to));
+    memset(&lonet, 0, sizeof(lonet));
 
     sp = getservbyname("router", "udp");
 
