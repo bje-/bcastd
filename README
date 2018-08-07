@@ -1,0 +1,102 @@
+bcastd: a RIP broadcasting daemon for Linux
+
+Written by Ben Elliston (ben@cooper.compsol.fidonet.org)
+Version 1.0b
+
+
+What is bcastd?
+--------------- 
+
+bcastd is useful for "terminal" subnets and networks of individual machines 
+which do not need to process incoming RIP packets.  bcastd does what routed
+currently does not .. broadcasts a variable number of RIP packets to your
+gateway every 30 seconds to keep routes alive.
+
+Here's how it can be used:
+
+           ethernet
+ +---------------------------+             +------------------------+
+     |         |          |      ppp        |
+    [ ]       [ ]        [ ]---------------[ ]
+   node 2   node 21    node 6            node 12  
+
+All these machines are in the same subnet (mask 255.255.255.0).  Let's say
+it's 1.1.1.  
+
+1.1.1.12 is the IP address of the PPP interface on the gateway machine (which,
+itself, must publicise the routing table it learns to locally connected hosts
+and routers).
+
+1.1.1.6 is the IP address of the other end of the PPP link (which is on your 
+local network).  Also connected is 1.1.1.2 and 1.1.1.21.  To get these two 
+machines known to the outside world, one could just run routed.  But routed is
+broken for Linux!
+
+I'm offering a limited alternative (since node 6 doesn't care about incoming
+RIP packets in this situation).  bcastd can be run to broadcast RIP packets
+to the gateway.  The gateway must have the machine (in this case, node 6) 
+listed in /etc/gateways as being an active gateway.
+
+With this in place, bcastd should be run on node 6 with the following command
+line arguments:
+
+  % /usr/etc/bcastd 1.1.1.12 1.1.1.2 1.1.1.21 &
+
+(1.1.1.6 doesn't need mentioning, because the PPP connection will define its
+own route to node 6 when the link is brought up).
+
+Every 30 seconds, nodes 2 and 21 will be made known to node 12 who (hopefully)
+will pass that information onto other immediately connected routers/hosts.
+
+Further help on usage can be found in the first comment pair of the source
+code.
+
+
+Installing bcastd
+-----------------
+
+I provide the source code for bcastd in this distribution.  It requires only
+cc to compile (but I used gcc). 
+
+  % gcc bcastd.c -o bcastd
+
+Once compiled, install it onto /usr/etc (or /usr/sbin on newer Linux systems)
+and (to play safe) set the following permissions:
+
+  owner: bin.bin, mod: 700
+
+You might like to add this into an rc file somewhere to install it at boot   
+time.
+
+NOTE: This minor update corrects a compilation error and fixes the loop logic
+that prevented proper updates to the broadcast routes. Based on a suggestion
+from Al Longyear:
+ ...
+
+The change to permit it to compile is to change the statement:
+
+int main (ac, char *av[])
+
+to
+
+int main (int ac, char *av[])
+          ^^^^
+The change to permit it to run properly is to change the loop as it 
+processes addresses so that it uses '<' rather than '<=' since it starts
+at 1 and goes to 'ac'. The problem is that the first argument is not part
+of the loop. The result is that if the program tries to use the existing
+code it will attempt to reference page 0. This will cause a SEGV.
+
+With these two changes, bcastd compiles and works correctly.
+
+How about updating the copy on sunsite so that others don't have the
+same problem? I sent mail to the author about these problems and haven't
+received a response.
+
+Gated is good. However, it is a large program just to send RIP frames. 
+
+-- 
+Al Longyear           longyear@netcom.com
+Finger for PGP key
+
+-------------------------------------------
