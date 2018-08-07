@@ -75,61 +75,61 @@ void getpacket(int fd);
 int
 main(int ac, char *av[])
 {
-    int fd, i;
-    struct servent *sp;
-    struct sockaddr_in addr;  
-    struct sockaddr_in to;
-    struct sockaddr_in lonet;
+  int fd, i;
+  struct servent *sp;
+  struct sockaddr_in addr;  
+  struct sockaddr_in to;
+  struct sockaddr_in lonet;
 
-    memset(&addr, 0, sizeof(addr));
-    memset(&to, 0, sizeof(to));
-    memset(&lonet, 0, sizeof(lonet));
+  memset(&addr, 0, sizeof(addr));
+  memset(&to, 0, sizeof(to));
+  memset(&lonet, 0, sizeof(lonet));
 
-    sp = getservbyname("router", "udp");
+  sp = getservbyname("router", "udp");
 
-    if (sp == NULL) 
+  if (sp == NULL) 
     {
       perror("getservbyname");
       exit(1);
     }
 
-    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
+  if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
     {
       perror("socket");
       exit(1);
     }
 
-    addr.sin_family = AF_INET;
-    addr.sin_port = sp->s_port;
+  addr.sin_family = AF_INET;
+  addr.sin_port = sp->s_port;
 
-    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) 
+  if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) 
     {
       perror("bind");
       exit(1);
     }
 
-    lonet.sin_family = htons(AF_INET);
-    lonet.sin_port = 0; 
+  lonet.sin_family = htons(AF_INET);
+  lonet.sin_port = 0; 
 
-    to.sin_family = AF_INET;
-    to.sin_port = sp->s_port;
-    to.sin_addr.s_addr = inet_addr(av[1]);
+  to.sin_family = AF_INET;
+  to.sin_port = sp->s_port;
+  to.sin_addr.s_addr = inet_addr(av[1]);
 
-    for (;;) 
+  for (;;) 
     {
       struct rip rip;
       for (i = 2; i < ac; i++)
-      {
-        lonet.sin_addr.s_addr = inet_addr(av[i]);
-        bzero(&rip, sizeof(rip));
-        rip.rip_cmd = RIPCMD_RESPONSE;
-        rip.rip_vers = RIPVERSION;
-        rip.rip_nets[0].rip_dst = *(struct sockaddr *)&lonet;
-        rip.rip_nets[0].rip_metric = htonl(2);
-        if (sendto(fd, (void *)&rip, sizeof(rip), 0, (void *)&to, sizeof(to)) < 0)
-          perror("sendto");
-      }
+	{
+	  lonet.sin_addr.s_addr = inet_addr(av[i]);
+	  bzero(&rip, sizeof(rip));
+	  rip.rip_cmd = RIPCMD_RESPONSE;
+	  rip.rip_vers = RIPVERSION;
+	  rip.rip_nets[0].rip_dst = *(struct sockaddr *)&lonet;
+	  rip.rip_nets[0].rip_metric = htonl(2);
+	  if (sendto(fd, (void *)&rip, sizeof(rip), 0, (void *)&to, sizeof(to)) < 0)
+	    perror("sendto");
+	}
       sleep(30);
     }
-    return(0);
+  return(0);
 }
